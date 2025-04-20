@@ -1,12 +1,12 @@
-import React, { useState } from "react";
-import api from "../../services/api";
+import { useState } from "react";
+import { api } from "~/services/api";
+import { useNavigate } from "react-router";
 
-// import { Container } from './styles';
-
-export default function Login({ history }) {
+export default function Login() {
   const [email, setEmail] = useState("");
+  const navigate = useNavigate();
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event: { preventDefault: () => void; }) {
     event.preventDefault();
 
     const response = await api.post("/sessions", { email });
@@ -15,7 +15,7 @@ export default function Login({ history }) {
 
     localStorage.setItem("user", _id);
 
-    history.push("/dashboard");
+    navigate("/dashboard");
   }
 
   return (
