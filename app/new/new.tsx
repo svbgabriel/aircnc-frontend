@@ -15,7 +15,7 @@ export default function New() {
         return thumbnail ? URL.createObjectURL(thumbnail) : null;
     }, [thumbnail]);
 
-    async function handleSubmit(event: { preventDefault: () => void; }) {
+    async function handleSubmit(event: React.FormEvent) {
         event.preventDefault();
 
         const data = new FormData();
@@ -40,7 +40,7 @@ export default function New() {
         <form onSubmit={handleSubmit}>
             <label
                 id="thumbnail"
-                style={{backgroundImage: `url(${preview})`}}
+                style={preview ? {backgroundImage: `url(${preview})`} : {}}
                 className={thumbnail ? "has-thumbnail" : ""}
             >
                 <input

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { api } from "~/services/api";
 import { useNavigate } from "react-router";
 
@@ -6,14 +6,14 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
 
-  async function handleSubmit(event: { preventDefault: () => void; }) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
 
     const response = await api.post("/sessions", { email });
 
-    const { _id } = response.data;
+    const { id } = response.data;
 
-    localStorage.setItem("user", _id);
+    localStorage.setItem("user", id);
 
     navigate("/dashboard");
   }

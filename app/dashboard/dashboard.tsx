@@ -21,49 +21,33 @@ interface BookingRequest {
     date: string;
 }
 
+interface WebSocketEvent {
+    event: string;
+    data: BookingRequest;
+}
+
 export default function Dashboard() {
     const [spots, setSpots] = useState<Spot[]>([]);
     const [requests, setRequests] = useState<BookingRequest[]>([]);
-    const [_, setSocket] = useState<WebSocket | null>(null);
 
-    const user_id = localStorage.getItem("user");
-
-    // Criando conexão WebSocket
     useEffect(() => {
+        const user_id = localStorage.getItem("user");
+        if (!user_id) return;
+
         const ws = new WebSocket(`ws://localhost:9090/websocket?user_id=${user_id}`);
 
-        ws.onopen = () => {
-            console.log('Conexão WebSocket estabelecida');
-        };
-
         ws.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                if (data.type === 'booking_request') {
-                    setRequests(prev => [...prev, data.payload]);
-                }
-            } catch (error) {
-                console.error('Erro ao processar mensagem:', error);
+            const message: WebSocketEvent = JSON.parse(event.data);
+
+            if (message.event === "booking_request") {
+                setRequests(prev => [...prev, message.data]);
             }
         };
 
-        ws.onerror = (error) => {
-            console.error('Erro na conexão WebSocket:', error);
-        };
-
-        ws.onclose = () => {
-            console.log('Conexão WebSocket fechada');
-        };
-
-        setSocket(ws);
-
-        // Limpeza ao desmontar o componente
         return () => {
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.close();
-            }
+            ws.close();
         };
-    }, [user_id]);
+    }, []);
 
     useEffect(() => {
         async function loadSpots(): Promise<void> {
@@ -79,13 +63,13 @@ export default function Dashboard() {
     }, []);
 
     async function handleAccept(id: string): Promise<void> {
-        await api.post(`/bookings/${id}/approve`);
-        setRequests(requests.filter(request => request._id !== id));
+        await api.post(`/bookings/${id}/approvals`);
+        setRequests(prev => prev.filter(request => request._id !== id));
     }
 
     async function handleReject(id: string): Promise<void> {
-        await api.post(`/bookings/${id}/reject`);
-        setRequests(requests.filter(request => request._id !== id));
+        await api.post(`/bookings/${id}/rejections`);
+        setRequests(prev => prev.filter(request => request._id !== id));
     }
 
     return (
@@ -116,7 +100,7 @@ export default function Dashboard() {
             <ul className="spot-list">
                 {spots.map(spot => (
                     <li key={spot._id}>
-                        <header style={{backgroundImage: `url(${spot.thumbnail_url})`}}/>
+                        <header style={spot.thumbnail_url ? {backgroundImage: `url(${spot.thumbnail_url})`} : {}}/>
                         <strong>{spot.company}</strong>
                         <span>{spot.price ? `R$${spot.price}/dia` : "GRATUITO"}</span>
                     </li>
